@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: reddit_scraper
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data  # Mount local data directory
+    networks:
+      scraper_network:
+        ipv4_address: 172.20.0.2  # Static IP for the app
+    command: python3 scrape.py
+
+  db:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: reddit_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      scraper_network:
+        ipv4_address: 172.20.0.3  # Static IP for the db
+
+networks:
+  scraper_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "172.20.0.0/24"  # Define subnet range
+
+volumes:
+  postgres_data:
